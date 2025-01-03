@@ -72,7 +72,6 @@ b) would mean that every run of this creates further logs that cannot be publish
 => The error will be returned and the problem will be logged ONCE by the handling function
 */
 func pushToLoki(logs [][]string, lokiEndpoint, logLevel, serviceName string) error {
-
 	lokiPushPath := "/loki/api/v1/push"
 
 	data, err := json.Marshal(lokiLogEvent{

@@ -1,7 +1,6 @@
 package zerologlokipublisher_test
 
 import (
-	"fmt"
 	"runtime"
 	"testing"
 	"time"
@@ -28,7 +27,6 @@ func Test_bgJobControl(t *testing.T) {
 	startTime := time.Now().Second()
 
 	for time.Now().Second()-startTime < 10 {
-		fmt.Print(time.Now().Second() - startTime)
 		// Success
 		if runtime.NumGoroutine() == initialGoRountineCount {
 			return
