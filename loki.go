@@ -23,6 +23,7 @@ type LokiConfig struct {
 
 type lokiClient struct {
 	config *LokiConfig
+	done   chan bool
 }
 
 type lokiStream struct {
@@ -40,7 +41,7 @@ func (l *lokiClient) bgRun() {
 	for {
 		if time.Now().Second()-lastRunTimestamp > l.config.PushIntveralSeconds || l.config.BatchCount > l.config.MaxBatchSize {
 			// Loop over all log levels and send them
-			for k, _ := range l.config.Values {
+			for k := range l.config.Values {
 				if len(l.config.Values) > 0 {
 					prevLogs := l.config.Values[k]
 					l.config.Values[k] = [][]string{}
@@ -51,13 +52,15 @@ func (l *lokiClient) bgRun() {
 					}
 					if err == nil && !isWorking {
 						isWorking = true
-						// I will not accept PR comments about this log message tyvm
 						log.Info().Msgf("Logs publishing now functional again. Logs are being published to loki instance")
 					}
 				}
 			}
 			lastRunTimestamp = time.Now().Second()
 			l.config.BatchCount = 0
+		}
+		if <-l.done {
+			break
 		}
 	}
 }
