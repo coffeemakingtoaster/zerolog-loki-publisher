@@ -31,15 +31,16 @@ func startMockLoki() (*sync.WaitGroup, *http.Server) {
 	return wg, &srv
 }
 
-func publishToClient(client lokiClient, t *testing.T) {
+func publishToClient(client lokiClient) {
 
 	msgs := [][]string{
-		[]string{strconv.FormatInt(time.Now().UnixNano(), 10), "Sample1"},
-		[]string{strconv.FormatInt(time.Now().UnixNano(), 10), "Sample2"},
-		[]string{strconv.FormatInt(time.Now().UnixNano(), 10), "Sample3"},
+		{strconv.FormatInt(time.Now().UnixNano(), 10), "Sample1"},
+		{strconv.FormatInt(time.Now().UnixNano(), 10), "Sample2"},
+		{strconv.FormatInt(time.Now().UnixNano(), 10), "Sample3"},
 	}
 
 	client.config.Values.Store("Debug", msgs)
+	client.config.BatchCount += 3
 }
 
 func testClientClear(client lokiClient, t *testing.T) {
@@ -84,7 +85,7 @@ func Test_triggerSendViaTime(t *testing.T) {
 
 	go client.bgRun()
 
-	publishToClient(client, t)
+	publishToClient(client)
 
 	testClientClear(client, t)
 }
@@ -101,7 +102,7 @@ func Test_triggerSendViaItemCount(t *testing.T) {
 
 	go client.bgRun()
 
-	publishToClient(client, t)
+	publishToClient(client)
 
 	testClientClear(client, t)
 }
