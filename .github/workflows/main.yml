@@ -1,0 +1,36 @@
+name: Build and test
+
+on:
+  pull_request:
+    branches:
+      - 'main'
+  push:
+    branch:
+      - 'main'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v4
+        with:
+          go-version: '1.23.3' 
+
+      - name: build
+        run: go build main.go
+
+  test: 
+    runs-on: ubuntu-latest
+    needs:
+      - build
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v4
+        with:
+          go-version: '1.23.3' 
+
+      - name: test 
+        run: go test ./...
