@@ -21,7 +21,11 @@ type lokiHook struct {
 }
 
 func (h *lokiHook) Run(e *zerolog.Event, level zerolog.Level, msg string) {
-	h.client.config.Values[level.String()] = append(h.client.config.Values[level.String()], []string{strconv.FormatInt(time.Now().UnixNano(), 10), msg})
+	curr_val, err := h.client.config.Values.Load(level.String())
+	if !err || curr_val == nil {
+		curr_val = [][]string{}
+	}
+	h.client.config.Values.Store(level.String(), append(curr_val.([][]string), []string{strconv.FormatInt(time.Now().UnixNano(), 10), msg}))
 	h.client.config.BatchCount++
 }
 

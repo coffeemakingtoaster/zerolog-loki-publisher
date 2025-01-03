@@ -32,19 +32,28 @@ func startMockLoki() (*sync.WaitGroup, *http.Server) {
 }
 
 func publishToClient(client lokiClient, t *testing.T) {
-	client.config.Values["Debug"] = append(client.config.Values["Debug"], []string{strconv.FormatInt(time.Now().UnixNano(), 10), "Sample1"})
-	client.config.Values["Debug"] = append(client.config.Values["Debug"], []string{strconv.FormatInt(time.Now().UnixNano(), 10), "Sample2"})
-	client.config.Values["Debug"] = append(client.config.Values["Debug"], []string{strconv.FormatInt(time.Now().UnixNano(), 10), "Sample3"})
-	if len(client.config.Values["Debug"]) != 3 {
-		t.Error("Something went wrong when setting up")
+
+	msgs := [][]string{
+		[]string{strconv.FormatInt(time.Now().UnixNano(), 10), "Sample1"},
+		[]string{strconv.FormatInt(time.Now().UnixNano(), 10), "Sample2"},
+		[]string{strconv.FormatInt(time.Now().UnixNano(), 10), "Sample3"},
 	}
+
+	client.config.Values.Store("Debug", msgs)
 }
 
 func testClientClear(client lokiClient, t *testing.T) {
 	startTime := time.Now().Second()
 
 	for time.Now().Second()-startTime < 10 {
-		if len(client.config.Values["Debug"]) == 0 {
+		curr, ok := client.config.Values.Load("Debug")
+		if !ok {
+			return
+		}
+		if curr == nil {
+			return
+		}
+		if len(curr.([][]string)) == 0 {
 			return
 		}
 	}
@@ -68,7 +77,7 @@ func Test_triggerSendViaTime(t *testing.T) {
 		MaxBatchSize:        50000,
 		LokiEndpoint:        "http://127.0.0.1:3100",
 		BatchCount:          0,
-		Values:              make(map[string][][]string),
+		Values:              sync.Map{},
 	}
 
 	client := lokiClient{config: &config, done: make(chan bool)}
@@ -86,7 +95,7 @@ func Test_triggerSendViaItemCount(t *testing.T) {
 		MaxBatchSize:        3,
 		LokiEndpoint:        "http://127.0.0.1:3100",
 		BatchCount:          0,
-		Values:              make(map[string][][]string),
+		Values:              sync.Map{},
 	}
 	client := lokiClient{config: &config, done: make(chan bool)}
 

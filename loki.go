@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -15,7 +16,8 @@ type LokiConfig struct {
 	PushIntveralSeconds int
 	// This will also trigger the send event
 	MaxBatchSize int
-	Values       map[string][][]string
+	//Values       map[string][][]string
+	Values       sync.Map
 	LokiEndpoint string
 	BatchCount   int
 	ServiceName  string
@@ -39,13 +41,14 @@ func (l *lokiClient) bgRun() {
 	lastRunTimestamp := 0
 	isWorking := true
 	for {
-		if time.Now().Second()-lastRunTimestamp > l.config.PushIntveralSeconds || l.config.BatchCount > l.config.MaxBatchSize {
+		if time.Now().Second()-lastRunTimestamp > l.config.PushIntveralSeconds || l.config.BatchCount >= l.config.MaxBatchSize {
 			// Loop over all log levels and send them
-			for k := range l.config.Values {
-				if len(l.config.Values) > 0 {
-					prevLogs := l.config.Values[k]
-					l.config.Values[k] = [][]string{}
-					err := pushToLoki(prevLogs, l.config.LokiEndpoint, k, l.config.ServiceName)
+			l.config.Values.Range(func(key, value any) bool {
+				logMessages := value.([][]string)
+				if len(logMessages) > 0 {
+					prevLogs := logMessages
+					l.config.Values.Delete(key)
+					err := pushToLoki(prevLogs, l.config.LokiEndpoint, key.(string), l.config.ServiceName)
 					if err != nil && isWorking {
 						isWorking = false
 						log.Error().Msgf("Logs are currently not being forwarded to loki due to an error: %v", err)
@@ -55,7 +58,8 @@ func (l *lokiClient) bgRun() {
 						log.Info().Msgf("Logs publishing now functional again. Logs are being published to loki instance")
 					}
 				}
-			}
+				return true
+			})
 			lastRunTimestamp = time.Now().Second()
 			l.config.BatchCount = 0
 		}

@@ -2,6 +2,7 @@ package zerologlokipublisher_test
 
 import (
 	"runtime"
+	"sync"
 	"testing"
 	"time"
 
@@ -15,7 +16,7 @@ func Test_bgJobControl(t *testing.T) {
 		MaxBatchSize:        500, //Threshold of 500 events
 		LokiEndpoint:        "127.0.0.0",
 		BatchCount:          0,
-		Values:              make(map[string][][]string),
+		Values:              sync.Map{},
 	})
 
 	if runtime.NumGoroutine() != initialGoRountineCount+1 {
