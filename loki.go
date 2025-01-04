@@ -17,7 +17,7 @@ type LokiConfig struct {
 	// This will also trigger the send event
 	MaxBatchSize int
 	//Values       map[string][][]string
-	Values       sync.Map
+	values       sync.Map
 	LokiEndpoint string
 	BatchCount   int
 	ServiceName  string
@@ -43,11 +43,11 @@ func (l *lokiClient) bgRun() {
 	for {
 		if time.Now().Second()-lastRunTimestamp > l.config.PushIntveralSeconds || l.config.BatchCount >= l.config.MaxBatchSize {
 			// Loop over all log levels and send them
-			l.config.Values.Range(func(key, value any) bool {
+			l.config.values.Range(func(key, value any) bool {
 				logMessages := value.([][]string)
 				if len(logMessages) > 0 {
 					prevLogs := logMessages
-					l.config.Values.Delete(key)
+					l.config.values.Delete(key)
 					err := pushToLoki(prevLogs, l.config.LokiEndpoint, key.(string), l.config.ServiceName)
 					if err != nil && isWorking {
 						isWorking = false

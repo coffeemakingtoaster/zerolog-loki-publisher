@@ -1,0 +1,5 @@
+services: 
+  loki:
+    image: grafana/loki:latest
+    ports:
+      - "3100:3100"

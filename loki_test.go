@@ -39,7 +39,7 @@ func publishToClient(client lokiClient) {
 		{strconv.FormatInt(time.Now().UnixNano(), 10), "Sample3"},
 	}
 
-	client.config.Values.Store("Debug", msgs)
+	client.config.values.Store("Debug", msgs)
 	client.config.BatchCount += 3
 }
 
@@ -47,7 +47,7 @@ func testClientClear(client lokiClient, t *testing.T) {
 	startTime := time.Now().Second()
 
 	for time.Now().Second()-startTime < 10 {
-		curr, ok := client.config.Values.Load("Debug")
+		curr, ok := client.config.values.Load("Debug")
 		if !ok {
 			return
 		}
@@ -78,7 +78,7 @@ func Test_triggerSendViaTime(t *testing.T) {
 		MaxBatchSize:        50000,
 		LokiEndpoint:        "http://127.0.0.1:3100",
 		BatchCount:          0,
-		Values:              sync.Map{},
+		values:              sync.Map{},
 	}
 
 	client := lokiClient{config: &config, done: make(chan bool)}
@@ -96,7 +96,7 @@ func Test_triggerSendViaItemCount(t *testing.T) {
 		MaxBatchSize:        3,
 		LokiEndpoint:        "http://127.0.0.1:3100",
 		BatchCount:          0,
-		Values:              sync.Map{},
+		values:              sync.Map{},
 	}
 	client := lokiClient{config: &config, done: make(chan bool)}
 

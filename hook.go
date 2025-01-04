@@ -2,6 +2,7 @@ package zerologlokipublisher
 
 import (
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -11,6 +12,7 @@ import (
 var _ zerolog.Hook = (*lokiHook)(nil)
 
 func NewHook(config LokiConfig) *lokiHook {
+	config.values = sync.Map{}
 	client := lokiClient{config: &config, done: make(chan bool)}
 	go client.bgRun()
 	return &lokiHook{client: &client}
@@ -21,11 +23,11 @@ type lokiHook struct {
 }
 
 func (h *lokiHook) Run(e *zerolog.Event, level zerolog.Level, msg string) {
-	curr_val, err := h.client.config.Values.Load(level.String())
+	curr_val, err := h.client.config.values.Load(level.String())
 	if !err || curr_val == nil {
 		curr_val = [][]string{}
 	}
-	h.client.config.Values.Store(level.String(), append(curr_val.([][]string), []string{strconv.FormatInt(time.Now().UnixNano(), 10), msg}))
+	h.client.config.values.Store(level.String(), append(curr_val.([][]string), []string{strconv.FormatInt(time.Now().UnixNano(), 10), msg}))
 	h.client.config.BatchCount++
 }
 
