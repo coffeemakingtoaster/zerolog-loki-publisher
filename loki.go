@@ -14,14 +14,10 @@ import (
 
 // Config for the loki pusblishing
 type LokiConfig struct {
-	// Threshhold in seconds. Once this time is exceeded all recoreded logs are sent to loki
-	PushIntveralSeconds int
-	// Threshhold in log amount. Once this threshold is reached all recoreded logs are sent to loki
-	MaxBatchSize int
-	// Loki instance endpoint. This does not include the path
-	LokiEndpoint string
-	// Service name as forwarded to loki
-	ServiceName string
+	PushIntveralSeconds int    // Threshhold in seconds. Once this time is exceeded all recoreded logs are sent to loki
+	MaxBatchSize        int    // Threshhold in log amount. Once this threshold is reached all recoreded logs are sent to loki
+	LokiEndpoint        string // Loki instance endpoint. This does not include the path
+	ServiceName         string // Service name as forwarded to loki
 }
 
 type lokiClient struct {

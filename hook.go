@@ -1,3 +1,4 @@
+// Package provides a simple zerolog hook for publishing log messages to loki
 package zerologlokipublisher
 
 import (
@@ -8,10 +9,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// Compile time check if lokiHook (still) satisfies the Hook interface from zerolog
-var _ zerolog.Hook = (*lokiHook)(nil)
-
-// Instantiate a new instance of the hook.
+// Function to instantiate a new instance of the hook.
 // This includes starting the background go routine for publishing log messages to loki
 // Returns a pointer to the hook that will have to be passed to zerolog
 func NewHook(config LokiConfig) *lokiHook {
@@ -19,6 +17,9 @@ func NewHook(config LokiConfig) *lokiHook {
 	go client.bgRun()
 	return &lokiHook{client: &client}
 }
+
+// Compile time check if lokiHook (still) satisfies the Hook interface from zerolog
+var _ zerolog.Hook = (*lokiHook)(nil)
 
 type lokiHook struct {
 	client *lokiClient
