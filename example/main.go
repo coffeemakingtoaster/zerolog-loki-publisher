@@ -12,7 +12,7 @@ func main() {
 		PushIntveralSeconds: 10,
 		MaxBatchSize:        500,
 		LokiEndpoint:        "http://localhost:3100",
-		BatchCount:          0,
+		ServiceName:         "example",
 	})
 
 	log.Logger = log.Hook(hook)

@@ -12,20 +12,24 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// Config for the loki pusblishing
 type LokiConfig struct {
+	// Threshhold in seconds. Once this time is exceeded all recoreded logs are sent to loki
 	PushIntveralSeconds int
-	// This will also trigger the send event
+	// Threshhold in log amount. Once this threshold is reached all recoreded logs are sent to loki
 	MaxBatchSize int
-	//Values       map[string][][]string
-	values       sync.Map
+	// Loki instance endpoint. This does not include the path
 	LokiEndpoint string
-	BatchCount   int
-	ServiceName  string
+	// Service name as forwarded to loki
+	ServiceName string
 }
 
 type lokiClient struct {
 	config *LokiConfig
 	done   chan bool
+	values sync.Map
+	// Current amount of logs that have not yet been sent
+	batchCount int
 }
 
 type lokiStream struct {
@@ -41,13 +45,13 @@ func (l *lokiClient) bgRun() {
 	lastRunTimestamp := 0
 	isWorking := true
 	for {
-		if time.Now().Second()-lastRunTimestamp > l.config.PushIntveralSeconds || l.config.BatchCount >= l.config.MaxBatchSize {
+		if time.Now().Second()-lastRunTimestamp > l.config.PushIntveralSeconds || l.batchCount >= l.config.MaxBatchSize {
 			// Loop over all log levels and send them
-			l.config.values.Range(func(key, value any) bool {
+			l.values.Range(func(key, value any) bool {
 				logMessages := value.([][]string)
 				if len(logMessages) > 0 {
 					prevLogs := logMessages
-					l.config.values.Delete(key)
+					l.values.Delete(key)
 					err := pushToLoki(prevLogs, l.config.LokiEndpoint, key.(string), l.config.ServiceName)
 					if err != nil && isWorking {
 						isWorking = false
@@ -61,7 +65,7 @@ func (l *lokiClient) bgRun() {
 				return true
 			})
 			lastRunTimestamp = time.Now().Second()
-			l.config.BatchCount = 0
+			l.batchCount = 0
 		}
 		if <-l.done {
 			break

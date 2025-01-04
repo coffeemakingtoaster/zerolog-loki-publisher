@@ -14,7 +14,7 @@ func Test_bgJobControl(t *testing.T) {
 		PushIntveralSeconds: 10,  // Threshhold of 10s
 		MaxBatchSize:        500, //Threshold of 500 events
 		LokiEndpoint:        "127.0.0.0",
-		BatchCount:          0,
+		ServiceName:         "example",
 	})
 
 	if runtime.NumGoroutine() != initialGoRountineCount+1 {
